@@ -52,7 +52,7 @@ st.markdown("<h1 style='text-align: center;font-size: 25px;'>The Most Versatile 
             unsafe_allow_html=True)
 
 add_selectbox=option_menu(menu_title="Business Card Toolkit 📇",
-                        options=["Fetch Card", "Uncover Card", "Enhancements","Eradicate Card"],
+                        options=["Fetch & Uncover Card", "Enhancements","Eradicate Card"],
                     icons=["archive","cloud-upload","database-add","search"],
                     default_index=0,
                     orientation="horizontal"
@@ -62,7 +62,7 @@ with st.sidebar:
     st.title("Avilable Business Cards")
     st.image("C:\\Users\\91822\\OneDrive\\Documents\\Capstone-03\\Capstone3\\Borcelle Airlines.png")
     
-if add_selectbox == "Fetch Card":
+if add_selectbox == "Fetch & Uncover Card":
     mycursor.execute(
             "select Company_Name,Card_Holder_Name,Designation,Mobile_Number,Email_Id,Website,Street,District,State,Pincode from card_details1")
     updated_df = pd.DataFrame(mycursor.fetchall(),
@@ -72,8 +72,6 @@ if add_selectbox == "Fetch Card":
     st.subheader(":blue[Upload a Business Card]")
     uploaded_card = st.file_uploader("upload here", label_visibility="collapsed", type=["png", "jpeg", "jpg"])
     #"C:\Users\91822\OneDrive\Documents\Capstone-03\Capstone3\3.png"
-    if st.button("Display"):
-        st.write(updated_df)
 
     if uploaded_card is not None:
 
