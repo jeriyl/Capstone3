@@ -18,11 +18,11 @@ mydb = sql.connect(host="localhost",
                     )
 mycursor = mydb.cursor(buffered=True)
 
-create_table_query="""CREATE TABLE IF NOT EXISTS card_details1(
+create_table_query="""CREATE TABLE IF NOT EXISTS card_details(
                         Company_Name varchar(30),
                         Card_Holder_Name varchar(30) Primary Key,
                         Designation varchar(30),
-                        Mobile_Number Varchar(15),
+                        Mobile_Number Varchar(255),
                         Email_Id varchar(255) UNIQUE,
                         Website varchar(100),
                         Street varchar(50),
@@ -30,6 +30,8 @@ create_table_query="""CREATE TABLE IF NOT EXISTS card_details1(
                         State varchar(30),
                         Pincode varchar(10)
                         )"""
+mycursor.execute(create_table_query)
+mydb.commit()
 
 
 reader = easyocr.Reader(['en'])
@@ -71,7 +73,7 @@ with st.sidebar:
     
 if add_selectbox == "Fetch & Uncover Card":
     mycursor.execute(
-            "select Company_Name,Card_Holder_Name,Designation,Mobile_Number,Email_Id,Website,Street,District,State,Pincode from card_details1")
+            "select Company_Name,Card_Holder_Name,Designation,Mobile_Number,Email_Id,Website,Street,District,State,Pincode from card_details")
     updated_df = pd.DataFrame(mycursor.fetchall(),
                                 columns=["Company_Name", "Card_Holder_Name", "Designation", "Mobile_Number",
                                         "Email_Id",
@@ -160,7 +162,8 @@ if add_selectbox == "Fetch & Uncover Card":
                 elif "-" in i:
                     data["Mobile_Number"].append(i)
                     if len(data["Mobile_Number"]) == 2:
-                        data["Mobile_Number"] = "&".join(data["Mobile_Number"])
+                        data["Mobile_Number"] = " , ".join(data["Mobile_Number"])
+                
 
                 # To get COMPANY NAME
                 elif ind == len(res) - 1:
@@ -229,7 +232,7 @@ if add_selectbox == "Fetch & Uncover Card":
         if b:
             for i, row in df.iterrows():
                 # here %S means string values
-                sql = """INSERT INTO card_details1(Company_Name,Card_Holder_Name,Designation,Mobile_Number,Email_Id,Website,Street,District,State,Pincode)
+                sql = """INSERT INTO card_details(Company_Name,Card_Holder_Name,Designation,Mobile_Number,Email_Id,Website,Street,District,State,Pincode)
                         VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
                 mycursor.execute(sql, tuple(row))
                 # the connection is not auto committed by default, so we must commit to save our changes
@@ -237,7 +240,7 @@ if add_selectbox == "Fetch & Uncover Card":
                 st.success("Uploaded to database successfully!")
         
         if c:
-            mycursor.execute("select Company_name,Card_Holder_Name,Designation,Mobile_Number,Email_Id,Website,Street,District,State,Pincode from card_details1")
+            mycursor.execute("select Company_name,Card_Holder_Name,Designation,Mobile_Number,Email_Id,Website,Street,District,State,Pincode from card_details")
             updated_df = pd.DataFrame(mycursor.fetchall(),
                                         columns=["Company_Name", "Card_Holder_Name", "Designation", "Mobile_Number",
                                                 "Email_Id",
@@ -248,7 +251,7 @@ if add_selectbox == "Enhancements":
     st.subheader(':blue[Modify Extracted Data: Easily Edit Information Within This App]')
     
     try:
-        mycursor.execute("SELECT Card_Holder_Name FROM card_details1")
+        mycursor.execute("SELECT Card_Holder_Name FROM card_details")
         result = mycursor.fetchall()
         business_cards = {}
         for row in result:
@@ -260,7 +263,7 @@ if add_selectbox == "Enhancements":
         else:
             st.markdown("#### Update or modify any data below")
             mycursor.execute(
-            "select Company_Name,Card_Holder_Name,Designation,Mobile_Number,Email_Id,Website,Street,District,State,Pincode from card_details1 WHERE Card_Holder_Name=%s",
+            "select Company_Name,Card_Holder_Name,Designation,Mobile_Number,Email_Id,Website,Street,District,State,Pincode from card_details WHERE Card_Holder_Name=%s",
             (selected_card,))
             result = mycursor.fetchone()
 
@@ -279,7 +282,7 @@ if add_selectbox == "Enhancements":
             if st.button(":blue[Commit changes to DB]"):
 
                 # Update the information for the selected business card in the database
-                mycursor.execute("""UPDATE card_details1 SET Company_Name=%s,Card_Holder_Name=%s,Designation=%s,Mobile_Number=%s,Email_Id=%s,Website=%s,Street=%s,District=%s,State=%s,Pincode=%s
+                mycursor.execute("""UPDATE card_details SET Company_Name=%s,Card_Holder_Name=%s,Designation=%s,Mobile_Number=%s,Email_Id=%s,Website=%s,Street=%s,District=%s,State=%s,Pincode=%s
                                 WHERE Card_Holder_Name=%s""", (Company_Name, Card_Holder_Name, Designation, Mobile_Number, Email_Id, Website, Street, District, State, Pincode,
                 selected_card))
                 mydb.commit()
@@ -287,7 +290,7 @@ if add_selectbox == "Enhancements":
 
         if st.button(":blue[View updated data]"):
             mycursor.execute(
-                "select Company_Name,Card_Holder_Name,Designation,Mobile_Number,Email_Id,Website,Street,District,State,Pincode from card_details1")
+                "select Company_Name,Card_Holder_Name,Designation,Mobile_Number,Email_Id,Website,Street,District,State,Pincode from card_details")
             updated_df = pd.DataFrame(mycursor.fetchall(),
                                         columns=["Company_Name", "Card_Holder_Name", "Designation", "Mobile_Number",
                                                 "Email",
@@ -301,7 +304,7 @@ if add_selectbox == "Eradicate Card":
     
     st.subheader(":blue[Delete the data]")
     try:
-        mycursor.execute("SELECT Card_Holder_Name FROM card_details1")
+        mycursor.execute("SELECT Card_Holder_Name FROM card_details")
         result = mycursor.fetchall()
         business_cards = {}
         for row in result:
@@ -314,13 +317,13 @@ if add_selectbox == "Eradicate Card":
         else:
             st.write("#### Proceed to delete this card?")
             if st.button("Delete"):
-                mycursor.execute(f"DELETE FROM card_details1 WHERE Card_Holder_Name='{selected_card}'")
+                mycursor.execute(f"DELETE FROM card_details WHERE Card_Holder_Name='{selected_card}'")
                 mydb.commit()
                 st.success(" The selected card has been removed from the database.")
 
         if st.button(":blue[View updated data]"):
             mycursor.execute(
-                "select Company_Name,Card_Holder_Name,Designation,Mobile_Number,Email_Id,Website,Street,District,State,Pincode from card_details1")
+                "select Company_Name,Card_Holder_Name,Designation,Mobile_Number,Email_Id,Website,Street,District,State,Pincode from card_details")
             updated_df = pd.DataFrame(mycursor.fetchall(),
                                         columns=["Company_Name", "Card_Holder_Name", "Designation", "Mobile_Number",
                                                 "Email",
