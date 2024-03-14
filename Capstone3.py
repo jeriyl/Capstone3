@@ -9,8 +9,6 @@ import cv2
 import os
 import re
 
-#st.write("## :green[About :] Bizcard")
-#st.write(":red[JERRY]")
 mydb = sql.connect(host="localhost",
                     user="root",
                     password="mysql@123",
@@ -78,6 +76,7 @@ if add_selectbox == "Fetch & Uncover Card":
                                 columns=["Company_Name", "Card_Holder_Name", "Designation", "Mobile_Number",
                                         "Email_Id",
                                         "Website", "Street", "District", "State", "PinCode"])
+    updated_df.index=updated_df.index+1
     st.subheader(":blue[Upload a Business Card]")
     uploaded_card = st.file_uploader("upload here", label_visibility="collapsed", type=["png", "jpeg", "jpg"])
     #"C:\Users\91822\OneDrive\Documents\Capstone-03\Capstone3\3.png"
@@ -119,7 +118,7 @@ if add_selectbox == "Fetch & Uncover Card":
             saved_img = os.getcwd() + "\\" + "uploaded_cards" 
             image = cv2.imread(saved_img)
             res = reader.readtext(saved_img)
-            st.markdown("### Image Processed and Data Extracted")
+            st.markdown("### Processed Image")
             st.pyplot(image_preview(image, res))
 
                 # easy OCR
@@ -141,8 +140,7 @@ if add_selectbox == "Fetch & Uncover Card":
                 "Street": [],
                 "District": [],
                 "State": [],
-                "Pincode": []
-                
+                "Pincode": []               
                 }
         
         def get_data(res):
@@ -232,12 +230,14 @@ if add_selectbox == "Fetch & Uncover Card":
         if b:
             for i, row in df.iterrows():
                 # here %S means string values
-                sql = """INSERT INTO card_details(Company_Name,Card_Holder_Name,Designation,Mobile_Number,Email_Id,Website,Street,District,State,Pincode)
-                        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
-                mycursor.execute(sql, tuple(row))
-                # the connection is not auto committed by default, so we must commit to save our changes
-                mydb.commit()
-                st.success("Uploaded to database successfully!")
+                try:
+                    sql = """INSERT INTO card_details(Company_Name,Card_Holder_Name,Designation,Mobile_Number,Email_Id,Website,Street,District,State,Pincode)
+                            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
+                    mycursor.execute(sql, tuple(row))
+                    mydb.commit()
+                    st.success("Uploaded to database successfully!")
+                except Exception as e:
+                    st.error("Database already existing")
         
         if c:
             mycursor.execute("select Company_name,Card_Holder_Name,Designation,Mobile_Number,Email_Id,Website,Street,District,State,Pincode from card_details")
@@ -245,7 +245,8 @@ if add_selectbox == "Fetch & Uncover Card":
                                         columns=["Company_Name", "Card_Holder_Name", "Designation", "Mobile_Number",
                                                 "Email_Id",
                                                 "Website", "Street", "District", "State", "Pincode"])
-            st.write(updated_df)
+            updated_df.index=updated_df.index+1
+            st.dataframe(updated_df)
 
 if add_selectbox == "Enhancements":
     st.subheader(':blue[Modify Extracted Data: Easily Edit Information Within This App]')
@@ -295,6 +296,7 @@ if add_selectbox == "Enhancements":
                                         columns=["Company_Name", "Card_Holder_Name", "Designation", "Mobile_Number",
                                                 "Email",
                                                 "Website", "Street", "District", "State", "Pincode"])
+            updated_df.index=updated_df.index+1
             st.write(updated_df)
 
     except:
@@ -328,6 +330,7 @@ if add_selectbox == "Eradicate Card":
                                         columns=["Company_Name", "Card_Holder_Name", "Designation", "Mobile_Number",
                                                 "Email",
                                                 "Website", "Street", "District", "State", "Pincode"])
+            updated_df.index=updated_df.index+1
             st.write(updated_df)
 
     except:
